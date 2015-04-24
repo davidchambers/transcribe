@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+set -e
+
+rm -f examples/*.md
+make
+git add examples/*.md
