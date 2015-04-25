@@ -1,0 +1,90 @@
+#!/usr/bin/env node
+
+'use strict';
+
+var fs = require('fs');
+
+var program = require('commander');
+var R = require('ramda');
+
+var pkg = require('../package.json');
+
+
+//. formatSignature :: Options -> String -> Number -> String -> String
+var formatSignature = R.curry(function(options, filename, line, signature) {
+  return R.join('', [
+    options.heading,
+    ' [`',
+    signature,
+    '`](',
+    options.url.replace('{filename}', filename).replace('{line}', line),
+    ')\n',
+  ]);
+});
+
+
+//. parseLine :: Options -> String -> Number -> String -> String
+var parseLine = R.curry(function(options, filename, line, value) {
+  return R.pipe(
+    R.replace(/^\s+/, ''),
+    R.ifElse(R.pipe(R.substringTo(R.length(options.prefix)),
+                    R.eq(options.prefix)),
+             R.pipe(R.substringFrom(R.length(options.prefix)),
+                    R.replace(/^[ ]/, ''),
+                    R.ifElse(R.test(/ :: /),
+                             formatSignature(options, filename, line),
+                             R.concat(R.__, '\n'))),
+             R.always('\n'))
+  )(value);
+});
+
+
+//. parseFile :: Options -> String -> String
+var parseFile = R.curry(function(options, filename) {
+  return R.pipe(
+    fs.readFileSync,
+    String,
+    R.match(/^.*$/gm),
+    R.converge(R.zip,
+               R.pipe(R.length, R.inc, R.range(1)),
+               R.identity),
+    R.map(R.apply(parseLine(options, filename))),
+    R.join('')
+  )(filename);
+});
+
+
+//. transcribe :: Options -> [String] -> String
+var transcribe = R.curry(function(options, filenames) {
+  return R.pipe(
+    R.map(parseFile(options)),
+    R.join('\n\n'),
+    R.replace(/\n{3,}/g, '\n\n'),
+    R.replace(/^\n+/, ''),
+    R.replace(/\n+$/, '\n')
+  )(filenames);
+});
+
+
+program
+.version(pkg.version)
+.usage('[options] <file ...>')
+.description(pkg.description)
+.option('--heading <string>', 'heading level (default: "###")')
+.option('--prefix <string>', 'prefix for lines to transcribe (default: "//.")')
+.option('--url <string>', 'source URL with {filename} and {line} placeholders')
+.parse(process.argv);
+
+if (program.url == null) {
+  process.stderr.write('No --url template specified\n');
+  process.exit(1);
+}
+
+//. options :: { heading :: String, prefix :: String, url :: String }
+var options = {
+  heading:  R.defaultTo('###', program.heading),
+  prefix:   R.defaultTo('//.', program.prefix),
+  url:      program.url,
+};
+
+process.stdout.write(transcribe(options, program.args));

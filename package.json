@@ -1,0 +1,28 @@
+{
+  "name": "transcribe",
+  "version": "0.0.0",
+  "description": "Generate Markdown documentation from code comments",
+  "license": "MIT",
+  "homepage": "https://github.com/plaid/transcribe",
+  "bugs": "https://github.com/plaid/transcribe/issues",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/plaid/transcribe.git"
+  },
+  "bin": "./bin/transcribe",
+  "files": [
+    "/LICENSE",
+    "/README.md",
+    "/bin/transcribe",
+    "/package.json"
+  ],
+  "dependencies": {
+    "commander": "2.8.x",
+    "ramda": "0.13.x"
+  },
+  "devDependencies": {
+    "jscs": "1.12.x",
+    "jshint": "2.7.x",
+    "xyz": "0.5.x"
+  }
+}
