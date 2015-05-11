@@ -10,16 +10,25 @@ var R = require('ramda');
 var pkg = require('../package.json');
 
 
+//. esc :: String -> String
+var esc = R.pipe(R.replace(/&/g, '&amp;'),
+                 R.replace(/</g, '&lt;'),
+                 R.replace(/"/g, '&quot;'));
+
+
 //. formatSignature :: Options -> String -> Number -> String -> String
 var formatSignature = R.curry(function(options, filename, line, signature) {
-  return R.join('', [
-    options.heading,
-    ' [`',
-    signature,
-    '`](',
-    options.url.replace('{filename}', filename).replace('{line}', line),
-    ')\n',
-  ]);
+  var tagName = 'h' + String(options.heading.length);
+  var href = options.url
+             .replace('{filename}', filename)
+             .replace('{line}', line);
+  return (
+    '<' + esc(tagName) + ' name="' + esc(signature.split(' :: ')[0]) + '">' +
+      '<code>' +
+        '<a href="' + esc(href) + '">' + esc(signature) + '</a>' +
+      '</code>' +
+    '</' + esc(tagName) + '>\n'
+  );
 });
 
 
