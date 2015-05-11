@@ -1,6 +1,6 @@
 {
   "name": "transcribe",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Generate Markdown documentation from code comments",
   "license": "MIT",
   "homepage": "https://github.com/plaid/transcribe",
