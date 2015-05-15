@@ -4,11 +4,11 @@ Transcribe is a simple program which generates Markdown documentation from code
 comments.
 
 The general idea is that each "export" should be accompanied by a "docstring".
-The first line of the "docstring" should be a Haskell-inspired type signature.
-The signature line is identified by `::`, which must have a space either side.
+The first line of the "docstring" should be a Haskell-inspired type signature
+in the form `<heading-prefix> <name> :: <type>`.
 
 ```javascript
-//. map :: (a -> b) -> [a] -> [b]
+//# map :: (a -> b) -> [a] -> [b]
 //.
 //. Transforms a list of elements of type `a` into a list of elements
 //. of type `b` using the provided function of type `a -> b`.
@@ -28,9 +28,17 @@ var map = function(f) {
 };
 ```
 
-The `--prefix` option specifies which lines in the source files should appear
-in the output. The default value is `//.`; specify a different value if using
-a different comment style. For example:
+The __`--heading-prefix`__ option specifies which lines in the source files
+contain type signatures to become headings in the output. The default value
+is `//#`; specify a different value if using a different comment style. For
+example:
+
+    --heading-prefix '#%'
+
+The __`--prefix`__ option specifies which lines in the source files should
+appear in the output along with the lines prefixed with `<heading-prefix>`.
+The default value is `//.`; specify a different value if using a different
+comment style. For example:
 
     --prefix '#.'
 
@@ -40,21 +48,21 @@ in the default prefix makes it possible to be selective about which comments
 are included in the output: comments such as `// Should never get here!` will
 be ignored.
 
-The `--url` option specifies a template for generating links to specific lines
-of source code on GitHub or another code-hosting site. The value should include
-`{filename}` and `{line}` placeholders to be replaced with the filename and
-line number of each of the signature lines. For example:
+The __`--url`__ option specifies a template for generating links to specific
+lines of source code on GitHub or another code-hosting site. The value should
+include `{filename}` and `{line}` placeholders to be replaced with the filename
+and line number of each of the signature lines. For example:
 
     --url 'https://github.com/plaid/sanctuary/blob/v0.4.0/{filename}#L{line}'
 
 Avoid pointing to a moving target: include a tag name or commit hash rather
 than a branch name such as `master`.
 
-The `--heading` option specifies the heading level. The default value is `###`,
-which corresponds to an `<h3>` element in HTML. Remember to quote the value if
-providing this option, since `#` begins a line comment in Bash. For example:
+The __`--heading-level`__ option specifies the heading level, an integer in
+range [1, 6]. The default value is `3`, which corresponds to an `<h3>` element
+in HTML. Specify a different value if desired. For example:
 
-    --heading '####'
+    --heading-level 4
 
 The options should be followed by one or more filenames. The filenames may
 be separated from the options by `--`. Files are processed in the order in
@@ -65,7 +73,7 @@ Here's a complete example:
     $ transcribe \
     >   --url 'https://github.com/plaid/example/blob/v1.2.3/{filename}#L{line}' \
     >   -- examples/fp.js
-    ### [`map :: (a -> b) -> [a] -> [b]`](https://github.com/plaid/example/blob/v1.2.3/examples/fp.js#L4)
+    <h3 name="map"><code><a href="https://github.com/plaid/example/blob/v1.2.3/examples/fp.js#L4">map :: (a -> b) -> [a] -> [b]</a></code></h3>
 
     Transforms a list of elements of type `a` into a list of elements
     of type `b` using the provided function of type `a -> b`.
@@ -75,7 +83,7 @@ Here's a complete example:
     ['1', '2', '3', '4', '5']
     ```
 
-    ### [`filter :: (a -> Boolean) -> [a] -> [a]`](https://github.com/plaid/example/blob/v1.2.3/examples/fp.js#L24)
+    <h3 name="filter"><code><a href="https://github.com/plaid/example/blob/v1.2.3/examples/fp.js#L24">filter :: (a -> Boolean) -> [a] -> [a]</a></code></h3>
 
     Returns the list of elements which satisfy the provided predicate.
 
