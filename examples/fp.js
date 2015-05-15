@@ -1,7 +1,7 @@
 'use strict';
 
 
-//. map :: (a -> b) -> [a] -> [b]
+//# map :: (a -> b) -> [a] -> [b]
 //.
 //. Transforms a list of elements of type `a` into a list of elements
 //. of type `b` using the provided function of type `a -> b`.
@@ -21,7 +21,7 @@ var map = function(f) {
 };
 
 
-//. filter :: (a -> Boolean) -> [a] -> [a]
+//# filter :: (a -> Boolean) -> [a] -> [a]
 //.
 //. Returns the list of elements which satisfy the provided predicate.
 //.
