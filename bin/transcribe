@@ -36,12 +36,12 @@ var formatSignature = R.curry(function(options, filename, line, signature) {
 var parseLine = R.curry(function(options, filename, line, value) {
   return R.pipe(
     R.replace(/^\s+/, ''),
-    R.cond([R.pipe(R.strIndexOf(options.headingPrefix), R.eq(0)),
-            R.pipe(R.substringFrom(R.length(options.headingPrefix)),
+    R.cond([R.pipe(R.indexOf(options.headingPrefix), R.equals(0)),
+            R.pipe(R.drop(R.length(options.headingPrefix)),
                    R.replace(/^[ ]/, ''),
                    formatSignature(options, filename, line))],
-           [R.pipe(R.strIndexOf(options.prefix), R.eq(0)),
-            R.pipe(R.substringFrom(R.length(options.prefix)),
+           [R.pipe(R.indexOf(options.prefix), R.equals(0)),
+            R.pipe(R.drop(R.length(options.prefix)),
                    R.replace(/^[ ]/, ''),
                    R.concat(R.__, '\n'))],
            [R.T,
