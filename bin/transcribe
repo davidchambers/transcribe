@@ -36,16 +36,16 @@ var formatSignature = R.curry(function(options, filename, line, signature) {
 var parseLine = R.curry(function(options, filename, line, value) {
   return R.pipe(
     R.replace(/^\s+/, ''),
-    R.cond([R.pipe(R.indexOf(options.headingPrefix), R.equals(0)),
-            R.pipe(R.drop(R.length(options.headingPrefix)),
-                   R.replace(/^[ ]/, ''),
-                   formatSignature(options, filename, line))],
-           [R.pipe(R.indexOf(options.prefix), R.equals(0)),
-            R.pipe(R.drop(R.length(options.prefix)),
-                   R.replace(/^[ ]/, ''),
-                   R.concat(R.__, '\n'))],
-           [R.T,
-            R.always('\n')])
+    R.cond([[R.pipe(R.indexOf(options.headingPrefix), R.equals(0)),
+             R.pipe(R.drop(R.length(options.headingPrefix)),
+                    R.replace(/^[ ]/, ''),
+                    formatSignature(options, filename, line))],
+            [R.pipe(R.indexOf(options.prefix), R.equals(0)),
+             R.pipe(R.drop(R.length(options.prefix)),
+                    R.replace(/^[ ]/, ''),
+                    R.concat(R.__, '\n'))],
+            [R.T,
+             R.always('\n')]])
   )(value);
 });
 
@@ -53,7 +53,7 @@ var parseLine = R.curry(function(options, filename, line, value) {
 //. parseFile :: Options -> String -> String
 var parseFile = R.curry(function(options, filename) {
   return R.pipe(
-    fs.readFileSync,
+    R.unary(fs.readFileSync),
     String,
     R.match(/^.*$/gm),
     R.converge(R.zip,
