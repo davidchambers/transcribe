@@ -53,12 +53,10 @@ var parseLine = R.curry(function(options, filename, line, value) {
 //. parseFile :: Options -> String -> String
 var parseFile = R.curry(function(options, filename) {
   return R.pipe(
-    R.unary(fs.readFileSync),
+    fs.readFileSync,
     String,
     R.match(/^.*$/gm),
-    R.converge(R.zip,
-               R.pipe(R.length, R.inc, R.range(1)),
-               R.identity),
+    R.lift(R.zip)(R.pipe(R.length, R.inc, R.range(1)), R.identity),
     R.map(R.apply(parseLine(options, filename))),
     R.join('')
   )(filename);
