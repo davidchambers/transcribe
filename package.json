@@ -18,7 +18,7 @@
   ],
   "dependencies": {
     "commander": "2.8.x",
-    "ramda": "0.17.x"
+    "ramda": "0.18.x"
   },
   "devDependencies": {
     "jscs": "1.12.x",
