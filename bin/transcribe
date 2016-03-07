@@ -16,6 +16,27 @@ var esc = R.pipe(R.replace(/&/g, '&amp;'),
                  R.replace(/"/g, '&quot;'));
 
 
+//. nbsp :: String -> String
+var nbsp = R.replace(/[ ]/g, '\u00A0');
+
+
+//. controlWrapping :: String -> String
+var controlWrapping =
+R.pipe(R.split(' :: '),
+       R.map(R.split(' => ')),
+       R.map(R.map(R.split(/([(][^()]+[)])/))),
+       R.map(R.map(R.append(''))),
+       R.map(R.map(R.splitEvery(2))),
+       R.map(R.map(R.map(R.over(R.lensIndex(1), nbsp)))),
+       R.map(R.map(R.unnest)),
+       R.map(R.map(R.map(R.split(' -> ')))),
+       R.map(R.map(R.map(R.map(nbsp)))),
+       R.map(R.map(R.map(R.join(' -> ')))),
+       R.map(R.map(R.join(''))),
+       R.map(R.join(' => ')),
+       R.join(' :: '));
+
+
 //. formatSignature :: Options -> String -> Number -> String -> String
 var formatSignature = R.curry(function(options, filename, line, signature) {
   var tagName = 'h' + String(options.headingLevel);
@@ -25,7 +46,9 @@ var formatSignature = R.curry(function(options, filename, line, signature) {
   return (
     '<' + esc(tagName) + ' name="' + esc(signature.split(' :: ')[0]) + '">' +
       '<code>' +
-        '<a href="' + esc(href) + '">' + esc(signature) + '</a>' +
+        '<a href="' + esc(href) + '">' +
+          esc(controlWrapping(signature)) +
+        '</a>' +
       '</code>' +
     '</' + esc(tagName) + '>\n'
   );
