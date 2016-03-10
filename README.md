@@ -64,6 +64,14 @@ in HTML. Specify a different value if desired. For example:
 
     --heading-level 4
 
+The __`--insert-into`__ option specifies the name of a file into which
+Transcribe will insert the generated output. By default, Transcribe writes to
+stdout. However, if `--insert-into` is provided, Transcribe will insert the
+output in the specified file between two special tags: `<!--transcribe-->` and
+`<!--/transcribe-->`. For example:
+
+    --insert-into README.md
+
 The options should be followed by one or more filenames. The filenames may
 be separated from the options by `--`. Files are processed in the order in
 which they are specified.
@@ -92,8 +100,8 @@ Here's a complete example:
     [2, 4]
     ```
 
-The output is written to stdout. One could redirect it to a file to generate
-lightweight API documentation:
+By default, the output is written to stdout. One could redirect it to a file to
+generate lightweight API documentation:
 
     $ printf '\n## API\n\n' >>README.md
     $ transcribe \
@@ -101,3 +109,11 @@ lightweight API documentation:
     >   -- examples/fp.js >>README.md
 
 Reading from stdin is not currently supported.
+
+One could also insert the output into an existing file by providing the
+`--insert-into` option:
+
+    $ transcribe \
+    >   --url 'https://github.com/plaid/example/blob/v1.2.3/{filename}#L{line}' \
+    >   --insert-into README.md
+    >   -- examples/fp.js
