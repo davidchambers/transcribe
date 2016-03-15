@@ -104,6 +104,8 @@ program
 .description(pkg.description)
 .option('--heading-level <num>', 'heading level in range [1, 6] (default: 3)')
 .option('--heading-prefix <str>', 'prefix for heading lines (default: "//#")')
+.option('--insert-into <str>', 'name of a file into which Transcribe will' +
+  ' insert generated output')
 .option('--prefix <str>', 'prefix for non-heading lines (default: "//.")')
 .option('--url <str>', 'source URL with {filename} and {line} placeholders')
 .parse(process.argv);
@@ -128,8 +130,19 @@ if (!valid) {
 var options = {
   headingLevel:   Number(R.defaultTo('3', program.headingLevel)),
   headingPrefix:  R.defaultTo('//#', program.headingPrefix),
+  insertInto:     R.defaultTo(null, program.insertInto),
   prefix:         R.defaultTo('//.', program.prefix),
   url:            program.url,
 };
 
-process.stdout.write(transcribe(options, program.args));
+var output = transcribe(options, program.args);
+if (options.insertInto == null) {
+  process.stdout.write(output);
+} else {
+  // Read the file, insert the output, and write to the file again
+  fs.writeFileSync(options.insertInto, R.replace(
+    /(<!--transcribe-->)[\s\S]*?(<!--[/]transcribe-->)/,
+    '$1\n\n' + output + '\n$2',
+    fs.readFileSync(options.insertInto, {encoding: 'utf8'})
+  ));
+}
