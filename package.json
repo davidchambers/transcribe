@@ -21,8 +21,8 @@
     "ramda": "0.19.x"
   },
   "devDependencies": {
-    "jscs": "1.12.x",
-    "jshint": "2.7.x",
+    "eslint": "2.9.x",
+    "sanctuary-style": "0.4.x",
     "xyz": "0.5.x"
   }
 }
