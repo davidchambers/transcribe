@@ -34,7 +34,8 @@ R.pipe(R.split(' :: '),
        R.map(R.map(R.map(R.join(' -> ')))),
        R.map(R.map(R.join(''))),
        R.map(R.join(' => ')),
-       R.join(' :: '));
+       R.join(' :: '),
+       R.replace(/->/g, '-\u2060>'));
 
 
 //. formatSignature :: Options -> String -> Number -> String -> String
