@@ -1,5 +1,4 @@
-JSCS = node_modules/.bin/jscs
-JSHINT = node_modules/.bin/jshint
+ESLINT = node_modules/.bin/eslint --config node_modules/sanctuary-style/eslint-es3.json --env es3 --env node
 NPM = npm
 XYZ = node_modules/.bin/xyz --repo git@github.com:plaid/transcribe.git --script scripts/prepublish
 
@@ -16,8 +15,8 @@ all: $(MD_EXAMPLES)
 
 .PHONY: lint
 lint:
-	$(JSHINT) -- bin/transcribe $(JS_EXAMPLES)
-	$(JSCS) -- bin/transcribe $(JS_EXAMPLES)
+	$(ESLINT) --rule 'comma-dangle: [error, always-multiline]' --rule 'key-spacing: [off]' -- bin/transcribe
+	$(ESLINT) --rule 'comma-dangle: [error, always-multiline]' --rule 'func-style: [error, expression]' -- $(JS_EXAMPLES)
 
 
 .PHONY: release-major release-minor release-patch
