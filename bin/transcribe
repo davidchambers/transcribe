@@ -40,19 +40,12 @@ R.pipe(R.split(' :: '),
 
 //. formatSignature :: Options -> String -> Number -> String -> String
 var formatSignature = R.curry(function(options, filename, line, signature) {
-  var tagName = 'h' + String(options.headingLevel);
-  var href = options.url
-             .replace('{filename}', filename)
-             .replace('{line}', line);
-  return (
-    '<' + esc(tagName) + ' name="' + esc(signature.split(' :: ')[0]) + '">' +
-      '<code>' +
-        '<a href="' + esc(href) + '">' +
-          esc(controlWrapping(signature)) +
-        '</a>' +
-      '</code>' +
-    '</' + esc(tagName) + '>\n'
-  );
+  return '######'.slice(0, options.headingLevel) + ' ' +
+         '<a name="' + esc(signature.split(' :: ')[0]) + '"' +
+           ' href="' + esc(options.url.replace('{filename}', filename)
+                                      .replace('{line}', line)) + '">' +
+           '`' + esc(controlWrapping(signature)) + '`' +
+         '</a>\n';
 });
 
 
