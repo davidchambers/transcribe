@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
-set -e
+set -euf -o pipefail
 
-rm -f examples/*.md
-make
-git add examples/*.md
+node_modules/.bin/sanctuary-prepublish "$@"
+
+bin/transcribe \
+  --url "https://github.com/plaid/transcribe/blob/v$VERSION/{filename}#L{line}" \
+  -- examples/fp.js >examples/fp.md
+git add examples/fp.md

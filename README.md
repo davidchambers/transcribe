@@ -8,7 +8,7 @@ The first line of the "docstring" should be a Haskell-inspired type signature
 in the form `<heading-prefix> <name> :: <type>`.
 
 ```javascript
-//# map :: (a -> b) -> [a] -> [b]
+//# map :: (a -> b) -> Array a -> Array b
 //.
 //. Transforms a list of elements of type `a` into a list of elements
 //. of type `b` using the provided function of type `a -> b`.
@@ -17,7 +17,7 @@ in the form `<heading-prefix> <name> :: <type>`.
 //. > map(String)([1, 2, 3, 4, 5])
 //. ['1', '2', '3', '4', '5']
 //. ```
-var map = function(f) {
+function map(f) {
   return function(xs) {
     var output = [];
     for (var idx = 0; idx < xs.length; idx += 1) {
@@ -25,7 +25,7 @@ var map = function(f) {
     }
     return output;
   };
-};
+}
 ```
 
 The __`--heading-prefix`__ option specifies which lines in the source files
@@ -59,8 +59,8 @@ Avoid pointing to a moving target: include a tag name or commit hash rather
 than a branch name such as `master`.
 
 The __`--heading-level`__ option specifies the heading level, an integer in
-range [1, 6]. The default value is `3`, which corresponds to an `<h3>` element
-in HTML. Specify a different value if desired. For example:
+range \[1, 6\]. The default value is `3`, which corresponds to an `<h3>`
+element in HTML. Specify a different value if desired. For example:
 
     --heading-level 4
 
@@ -81,7 +81,7 @@ Here's a complete example:
     $ transcribe \
     >   --url 'https://github.com/plaid/example/blob/v1.2.3/{filename}#L{line}' \
     >   -- examples/fp.js
-    ### <a name="map" href="https://github.com/plaid/example/blob/v1.2.3/examples/fp.js#L4">`map :: (a -⁠> b) -⁠> [a] -⁠> [b]`</a>
+    ### <a name="map" href="https://github.com/plaid/example/blob/v1.2.3/examples/fp.js#L3">`map :: (a -⁠> b) -⁠> Array a -⁠> Array b`</a>
 
     Transforms a list of elements of type `a` into a list of elements
     of type `b` using the provided function of type `a -> b`.
@@ -91,7 +91,7 @@ Here's a complete example:
     ['1', '2', '3', '4', '5']
     ```
 
-    ### <a name="filter" href="https://github.com/plaid/example/blob/v1.2.3/examples/fp.js#L24">`filter :: (a -⁠> Boolean) -⁠> [a] -⁠> [a]`</a>
+    ### <a name="filter" href="https://github.com/plaid/example/blob/v1.2.3/examples/fp.js#L23">`filter :: (a -⁠> Boolean) -⁠> Array a -⁠> Array a`</a>
 
     Returns the list of elements which satisfy the provided predicate.
 

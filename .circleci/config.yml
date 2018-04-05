@@ -10,4 +10,5 @@ jobs:
           NPM_CONFIG_PROGRESS: false
     steps:
       - checkout
-      - run: make setup test lint
+      - run: npm install
+      - run: npm test

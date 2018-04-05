@@ -120,13 +120,13 @@ if (!valid) {
   process.exit(1);
 }
 
-//. options :: { headingLevel, headingPrefix, prefix, url }
+//. options :: { headingLevel, headingPrefix, insertInto, prefix, url }
 var options = {
-  headingLevel:   Number(R.defaultTo('3', program.headingLevel)),
-  headingPrefix:  R.defaultTo('//#', program.headingPrefix),
-  insertInto:     R.defaultTo(null, program.insertInto),
-  prefix:         R.defaultTo('//.', program.prefix),
-  url:            program.url,
+  headingLevel: Number(R.defaultTo('3', program.headingLevel)),
+  headingPrefix: R.defaultTo('//#', program.headingPrefix),
+  insertInto: R.defaultTo(null, program.insertInto),
+  prefix: R.defaultTo('//.', program.prefix),
+  url: program.url
 };
 
 var output = transcribe(options, program.args);
