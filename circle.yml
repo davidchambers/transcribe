@@ -1,7 +1,0 @@
-machine:
-  node:
-    version: 0.10.34
-
-test:
-  override:
-    - make test lint
