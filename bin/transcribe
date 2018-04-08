@@ -44,7 +44,7 @@ var formatSignature = R.curry(function(options, filename, line, signature) {
          '<a name="' + esc(signature.split(' :: ')[0]) + '"' +
            ' href="' + esc(options.url.replace('{filename}', filename)
                                       .replace('{line}', line)) + '">' +
-           '`' + esc(controlWrapping(signature)) + '`' +
+           '`' + controlWrapping(signature) + '`' +
          '</a>\n';
 });
 
