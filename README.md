@@ -14,14 +14,14 @@ in the form `<heading-prefix> <name> :: <type>`.
 //. of type `b` using the provided function of type `a -> b`.
 //.
 //. ```javascript
-//. > map(String)([1, 2, 3, 4, 5])
+//. > map (String) ([1, 2, 3, 4, 5])
 //. ['1', '2', '3', '4', '5']
 //. ```
 function map(f) {
   return function(xs) {
     var output = [];
     for (var idx = 0; idx < xs.length; idx += 1) {
-      output.push(f(xs[idx]));
+      output.push (f (xs[idx]));
     }
     return output;
   };
@@ -87,7 +87,7 @@ Here's a complete example:
     of type `b` using the provided function of type `a -> b`.
 
     ```javascript
-    > map(String)([1, 2, 3, 4, 5])
+    > map (String) ([1, 2, 3, 4, 5])
     ['1', '2', '3', '4', '5']
     ```
 
@@ -96,7 +96,7 @@ Here's a complete example:
     Returns the list of elements which satisfy the provided predicate.
 
     ```javascript
-    > filter(function(n) { return n % 2 === 0; })([1, 2, 3, 4, 5])
+    > filter (function(n) { return n % 2 === 0; }) ([1, 2, 3, 4, 5])
     [2, 4]
     ```
 

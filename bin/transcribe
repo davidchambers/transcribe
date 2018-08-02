@@ -2,141 +2,141 @@
 
 'use strict';
 
-var fs = require('fs');
+var fs = require ('fs');
 
-var program = require('commander');
-var R = require('ramda');
+var program = require ('commander');
+var R = require ('ramda');
 
-var pkg = require('../package.json');
+var pkg = require ('../package.json');
 
 
 //. esc :: String -> String
-var esc = R.pipe(R.replace(/&/g, '&amp;'),
-                 R.replace(/</g, '&lt;'),
-                 R.replace(/"/g, '&quot;'));
+var esc = R.pipe (R.replace (/&/g, '&amp;'),
+                  R.replace (/</g, '&lt;'),
+                  R.replace (/"/g, '&quot;'));
 
 
 //. nbsp :: String -> String
-var nbsp = R.replace(/[ ]/g, '\u00A0');
+var nbsp = R.replace (/[ ]/g, '\u00A0');
 
 
 //. controlWrapping :: String -> String
 var controlWrapping =
-R.pipe(R.split(' :: '),
-       R.map(R.split(' => ')),
-       R.map(R.map(R.split(/([(][^()]+[)])/))),
-       R.map(R.map(R.append(''))),
-       R.map(R.map(R.splitEvery(2))),
-       R.map(R.map(R.map(R.over(R.lensIndex(1), nbsp)))),
-       R.map(R.map(R.unnest)),
-       R.map(R.map(R.map(R.split(' -> ')))),
-       R.map(R.map(R.map(R.map(nbsp)))),
-       R.map(R.map(R.map(R.join(' -> ')))),
-       R.map(R.map(R.join(''))),
-       R.map(R.join(' => ')),
-       R.join(' :: '),
-       R.replace(/->/g, '-\u2060>'));
+R.pipe (R.split (' :: '),
+        R.map (R.split (' => ')),
+        R.map (R.map (R.split (/([(][^()]+[)])/))),
+        R.map (R.map (R.append (''))),
+        R.map (R.map (R.splitEvery (2))),
+        R.map (R.map (R.map (R.over (R.lensIndex (1), nbsp)))),
+        R.map (R.map (R.unnest)),
+        R.map (R.map (R.map (R.split (' -> ')))),
+        R.map (R.map (R.map (R.map (nbsp)))),
+        R.map (R.map (R.map (R.join (' -> ')))),
+        R.map (R.map (R.join (''))),
+        R.map (R.join (' => ')),
+        R.join (' :: '),
+        R.replace (/->/g, '-\u2060>'));
 
 
 //. formatSignature :: Options -> String -> Number -> String -> String
-var formatSignature = R.curry(function(options, filename, line, signature) {
-  return '######'.slice(0, options.headingLevel) + ' ' +
-         '<a name="' + esc(signature.split(' :: ')[0]) + '"' +
-           ' href="' + esc(options.url.replace('{filename}', filename)
-                                      .replace('{line}', line)) + '">' +
-           '`' + controlWrapping(signature) + '`' +
+var formatSignature = R.curry (function(options, filename, line, signature) {
+  return '######'.slice (0, options.headingLevel) + ' ' +
+         '<a name="' + esc ((signature.split (' :: '))[0]) + '"' +
+           ' href="' + esc (options.url.replace ('{filename}', filename)
+                                       .replace ('{line}', line)) + '">' +
+           '`' + controlWrapping (signature) + '`' +
          '</a>\n';
 });
 
 
 //. parseLine :: Options -> String -> Number -> String -> String
-var parseLine = R.curry(function(options, filename, line, value) {
-  return R.pipe(
-    R.replace(/^\s+/, ''),
-    R.cond([[R.pipe(R.indexOf(options.headingPrefix), R.equals(0)),
-             R.pipe(R.drop(R.length(options.headingPrefix)),
-                    R.replace(/^[ ]/, ''),
-                    formatSignature(options, filename, line))],
-            [R.pipe(R.indexOf(options.prefix), R.equals(0)),
-             R.pipe(R.drop(R.length(options.prefix)),
-                    R.replace(/^[ ]/, ''),
-                    R.concat(R.__, '\n'))],
-            [R.T,
-             R.always('\n')]])
-  )(value);
+var parseLine = R.curry (function(options, filename, line, value) {
+  return R.pipe (
+    R.replace (/^\s+/, ''),
+    R.cond ([[R.pipe (R.indexOf (options.headingPrefix), R.equals (0)),
+              R.pipe (R.drop (R.length (options.headingPrefix)),
+                      R.replace (/^[ ]/, ''),
+                      formatSignature (options, filename, line))],
+             [R.pipe (R.indexOf (options.prefix), R.equals (0)),
+              R.pipe (R.drop (R.length (options.prefix)),
+                      R.replace (/^[ ]/, ''),
+                      R.concat (R.__, '\n'))],
+             [R.T,
+              R.always ('\n')]])
+  ) (value);
 });
 
 
 //. parseFile :: Options -> String -> String
-var parseFile = R.curry(function(options, filename) {
-  return R.pipe(
+var parseFile = R.curry (function(options, filename) {
+  return R.pipe (
     fs.readFileSync,
     String,
-    R.match(/^.*$/gm),
-    R.lift(R.zip)(R.pipe(R.length, R.inc, R.range(1)), R.identity),
-    R.map(R.apply(parseLine(options, filename))),
-    R.join('')
-  )(filename);
+    R.match (/^.*$/gm),
+    R.lift (R.zip) (R.pipe (R.length, R.inc, R.range (1)), R.identity),
+    R.map (R.apply (parseLine (options, filename))),
+    R.join ('')
+  ) (filename);
 });
 
 
 //. transcribe :: Options -> [String] -> String
-var transcribe = R.curry(function(options, filenames) {
-  return R.pipe(
-    R.map(parseFile(options)),
-    R.join('\n\n'),
-    R.replace(/\n{3,}/g, '\n\n'),
-    R.replace(/^\n+/, ''),
-    R.replace(/\n+$/, '\n')
-  )(filenames);
+var transcribe = R.curry (function(options, filenames) {
+  return R.pipe (
+    R.map (parseFile (options)),
+    R.join ('\n\n'),
+    R.replace (/\n{3,}/g, '\n\n'),
+    R.replace (/^\n+/, ''),
+    R.replace (/\n+$/, '\n')
+  ) (filenames);
 });
 
 
 program
-.version(pkg.version)
-.usage('[options] <file ...>')
-.description(pkg.description)
-.option('--heading-level <num>', 'heading level in range [1, 6] (default: 3)')
-.option('--heading-prefix <str>', 'prefix for heading lines (default: "//#")')
-.option('--insert-into <str>', 'name of a file into which Transcribe will' +
-  ' insert generated output')
-.option('--prefix <str>', 'prefix for non-heading lines (default: "//.")')
-.option('--url <str>', 'source URL with {filename} and {line} placeholders')
-.parse(process.argv);
+.version (pkg.version)
+.usage ('[options] <file ...>')
+.description (pkg.description)
+.option ('--heading-level <num>', 'heading level in range [1, 6] (default: 3)')
+.option ('--heading-prefix <str>', 'prefix for heading lines (default: "//#")')
+.option ('--insert-into <str>',
+         'name of a file into which Transcribe will insert generated output')
+.option ('--prefix <str>', 'prefix for non-heading lines (default: "//.")')
+.option ('--url <str>', 'source URL with {filename} and {line} placeholders')
+.parse (process.argv);
 
 var valid = true;
 
-if (!(program.headingLevel == null || /^[1-6]$/.test(program.headingLevel))) {
-  process.stderr.write('Invalid --heading-level\n');
+if (!(program.headingLevel == null || /^[1-6]$/.test (program.headingLevel))) {
+  process.stderr.write ('Invalid --heading-level\n');
   valid = false;
 }
 
 if (program.url == null) {
-  process.stderr.write('No --url template specified\n');
+  process.stderr.write ('No --url template specified\n');
   valid = false;
 }
 
 if (!valid) {
-  process.exit(1);
+  process.exit (1);
 }
 
 //. options :: { headingLevel, headingPrefix, insertInto, prefix, url }
 var options = {
-  headingLevel: Number(R.defaultTo('3', program.headingLevel)),
-  headingPrefix: R.defaultTo('//#', program.headingPrefix),
-  insertInto: R.defaultTo(null, program.insertInto),
-  prefix: R.defaultTo('//.', program.prefix),
+  headingLevel: Number (R.defaultTo ('3', program.headingLevel)),
+  headingPrefix: R.defaultTo ('//#', program.headingPrefix),
+  insertInto: R.defaultTo (null, program.insertInto),
+  prefix: R.defaultTo ('//.', program.prefix),
   url: program.url
 };
 
-var output = transcribe(options, program.args);
+var output = transcribe (options, program.args);
 if (options.insertInto == null) {
-  process.stdout.write(output);
+  process.stdout.write (output);
 } else {
   // Read the file, insert the output, and write to the file again
-  fs.writeFileSync(options.insertInto, R.replace(
+  fs.writeFileSync (options.insertInto, R.replace (
     /(<!--transcribe-->)[\s\S]*?(<!--[/]transcribe-->)/,
     '$1\n\n' + output + '\n$2',
-    fs.readFileSync(options.insertInto, {encoding: 'utf8'})
+    fs.readFileSync (options.insertInto, {encoding: 'utf8'})
   ));
 }
