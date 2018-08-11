@@ -1,0 +1,78 @@
+#!/usr/bin/env bash
+set -euf -o pipefail
+
+rst=$'\x1B[0m'
+red=$'\x1B[0;31m'
+grn=$'\x1B[0;32m'
+cyn=$'\x1B[0;36m'
+rev=$'\x1B[7m'
+
+function highlight {
+  local output
+  output="${1}${2}${rst}"
+  output="${output//$'\n'/"${rev}\\n${rst}${1}"$'\n'}"
+  output="${output//$'\xE2\x81\xA0'/"${rev}<U+2060>${rst}${1}"}"
+  printf '%s' "$output"
+}
+
+function compare {
+  if [[ "$3" == "$2" ]] ; then
+    printf '%s\u2714%s %s\n' "$grn" "$rst" "$1"
+  else
+    printf '%s\u2718%s %s\n' "$red" "$rst" "$1"
+    printf '%s\n' "$cyn---------------------------------- expected ----------------------------------$rst"
+    highlight "$grn" "$2"
+    printf '%s\n' "$cyn----------------------------------- actual -----------------------------------$rst"
+    highlight "$red" "$3"
+    printf '%s\n' "$cyn------------------------------------------------------------------------------$rst"
+    exit 1
+  fi
+}
+
+set +e
+IFS='' read -r -d '' unix <<'EOF'
+//# identity :: a -> a
+//.
+//. The identity function. Returns its argument.
+//.
+//. ```javascript
+//. > identity (1)
+//. 1
+//. ```
+function identity(x) {
+  return x;
+}
+exports.identity = identity;
+EOF
+IFS='' read -r -d '' dos <<'EOF'
+//# identity :: a -> a
+//.
+//. The identity function. Returns its argument.
+//.
+//. ```javascript
+//. > identity (1)
+//. 1
+//. ```
+function identity(x) {
+  return x;
+}
+exports.identity = identity;
+EOF
+IFS='' read -r -d '' expected <<'EOF'
+### <a name="identity" href="XXX">`identity :: a -⁠> a`</a>
+
+The identity function. Returns its argument.
+
+```javascript
+> identity (1)
+1
+```
+EOF
+set -e
+
+# Append an underscore to preserve trailing newlines, then strip it.
+actual="$(bin/transcribe --url XXX -- <(printf '%s' "$unix") && printf _)"
+compare 'Unix line endings' "$expected" "${actual%_}"
+
+actual="$(bin/transcribe --url XXX -- <(printf '%s' "$dos") && printf _)"
+compare 'Windows line endings' "$expected" "${actual%_}"
