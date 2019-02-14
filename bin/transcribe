@@ -72,6 +72,7 @@ var parseFile = R.curry (function(options, filename) {
   return R.pipe (
     fs.readFileSync,
     String,
+    R.replace (/\r\n?/g, '\n'),  // plaid/transcribe#23
     R.match (/^.*$/gm),
     R.lift (R.zip) (R.pipe (R.length, R.inc, R.range (1)), R.identity),
     R.map (R.apply (parseLine (options, filename))),
