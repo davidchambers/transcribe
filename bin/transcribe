@@ -2,96 +2,113 @@
 
 'use strict';
 
-var fs = require ('fs');
+const fs = require ('fs');
 
-var program = require ('commander');
-var R = require ('ramda');
+const program = require ('commander');
+const {create, env} = require ('sanctuary');
 
-var pkg = require ('../package.json');
-
-
-//. esc :: String -> String
-var esc = R.pipe (R.replace (/&/g, '&amp;'),
-                  R.replace (/</g, '&lt;'),
-                  R.replace (/"/g, '&quot;'));
+const pkg = require ('../package.json');
 
 
-//. nbsp :: String -> String
-var nbsp = R.replace (/[ ]/g, '\u00A0');
+const {
+  Just,
+  Nothing,
+  Pair,
+  alt,
+  append,
+  array,
+  compose: B,
+  flip,
+  fromMaybe,
+  join,
+  joinWith,
+  lines,
+  map,
+  pair,
+  pipe,
+  reduce,
+  snd,
+  splitOn,
+  stripPrefix,
+  unfoldr,
+  unlines,
+} = create ({checkTypes: false, env});
 
+const map2 = B (map) (map);
+const map3 = B (map) (map2);
+const map4 = B (map) (map3);
 
-//. controlWrapping :: String -> String
-var controlWrapping =
-R.pipe (R.split (' :: '),
-        R.map (R.split (' => ')),
-        R.map (R.map (R.split (/([(][^()]+[)])/))),
-        R.map (R.map (R.append (''))),
-        R.map (R.map (R.splitEvery (2))),
-        R.map (R.map (R.map (R.over (R.lensIndex (1), nbsp)))),
-        R.map (R.map (R.unnest)),
-        R.map (R.map (R.map (R.split (' -> ')))),
-        R.map (R.map (R.map (R.map (nbsp)))),
-        R.map (R.map (R.map (R.join (' -> ')))),
-        R.map (R.map (R.join (''))),
-        R.map (R.join (' => ')),
-        R.join (' :: '),
-        R.replace (/->/g, '-\u2060>'));
+//    replace :: (String | RegExp) -> String -> String -> String
+const replace = patt => repl => s => s.replace (patt, repl);
 
+//    esc :: String -> String
+const esc = pipe ([
+  replace (/&/g) ('&amp;'),
+  replace (/</g) ('&lt;'),
+  replace (/"/g) ('&quot;'),
+]);
 
-//. formatSignature :: Options -> String -> Number -> String -> String
-var formatSignature = R.curry (function(options, filename, line, signature) {
-  return '######'.slice (0, options.headingLevel) + ' ' +
-         '<a name="' + esc ((signature.split (' :: '))[0]) + '"' +
-           ' href="' + esc (options.url.replace ('{filename}', filename)
-                                       .replace ('{line}', line)) + '">' +
-           '`' + controlWrapping (signature) + '`' +
-         '</a>\n';
-});
+//    nbsp :: String -> String
+const nbsp = replace (/[ ]/g) ('\u00A0');
 
+//    controlWrapping :: String -> String
+const controlWrapping = pipe ([
+  splitOn (' :: '),
+  map (splitOn (' => ')),
+  map2 (s => join (unfoldr (array (Nothing)
+                                  (p => array (Just (Pair ([p, '']) ([])))
+                                              (q => B (Just)
+                                                      (Pair ([p, nbsp (q)])))))
+                           (s.split (/([(][^()]+[)])/)))),
+  map3 (splitOn (' -> ')),
+  map4 (nbsp),
+  map3 (joinWith (' -> ')),
+  map2 (joinWith ('')),
+  map (joinWith (' => ')),
+  joinWith (' :: '),
+  replace (/->/g) ('-\u2060>'),
+]);
 
-//. parseLine :: Options -> String -> Number -> String -> String
-var parseLine = R.curry (function(options, filename, line, value) {
-  return R.pipe (
-    R.replace (/^\s+/, ''),
-    R.cond ([[R.pipe (R.indexOf (options.headingPrefix), R.equals (0)),
-              R.pipe (R.drop (R.length (options.headingPrefix)),
-                      R.replace (/^[ ]/, ''),
-                      formatSignature (options, filename, line))],
-             [R.pipe (R.indexOf (options.prefix), R.equals (0)),
-              R.pipe (R.drop (R.length (options.prefix)),
-                      R.replace (/^[ ]/, ''),
-                      R.concat (R.__, '\n'))],
-             [R.T,
-              R.always ('\n')]])
-  ) (value);
-});
+//    formatSignature :: Options -> String -> Number -> String -> String
+const formatSignature = options => filename => num => signature =>
+  '#'.repeat (options.headingLevel) + ' ' +
+  '<a name="' + esc (replace (/ :: [\s\S]*/) ('') (signature)) + '"' +
+    ' href="' + esc (B (replace ('{line}') (num))
+                       (replace ('{filename}') (filename))
+                       (options.url)) + '">' +
+    '`' + controlWrapping (signature) + '`' +
+  '</a>';
 
+//    parseLine :: Options -> String -> Number -> String -> String
+const parseLine = options => filename => num => pipe ([
+  replace (/^\s+/) (''),
+  s => alt (map (replace (/^[ ]/) (''))
+                (stripPrefix (options.prefix) (s)))
+           (map (B (formatSignature (options) (filename) (num))
+                   (replace (/^[ ]/) ('')))
+                (stripPrefix (options.headingPrefix) (s))),
+  fromMaybe (''),
+]);
 
-//. parseFile :: Options -> String -> String
-var parseFile = R.curry (function(options, filename) {
-  return R.pipe (
-    fs.readFileSync,
-    String,
-    R.replace (/\r\n?/g, '\n'),  // plaid/transcribe#23
-    R.match (/^.*$/gm),
-    R.lift (R.zip) (R.pipe (R.length, R.inc, R.range (1)), R.identity),
-    R.map (R.apply (parseLine (options, filename))),
-    R.join ('')
-  ) (filename);
-});
+//    parseFile :: Options -> String -> String
+const parseFile = options => filename =>
+  unlines (snd (reduce (flip (line =>
+                                pair (num => B (Pair (num + 1))
+                                               (append (parseLine (options)
+                                                                  (filename)
+                                                                  (num)
+                                                                  (line))))))
+                       (Pair (1) ([]))
+                       (lines (fs.readFileSync (filename, 'utf8')))));
 
-
-//. transcribe :: Options -> [String] -> String
-var transcribe = R.curry (function(options, filenames) {
-  return R.pipe (
-    R.map (parseFile (options)),
-    R.join ('\n\n'),
-    R.replace (/\n{3,}/g, '\n\n'),
-    R.replace (/^\n+/, ''),
-    R.replace (/\n+$/, '\n')
-  ) (filenames);
-});
-
+//    transcribe :: Options -> Array String -> String
+const transcribe = options => pipe ([
+  map (parseFile (options)),
+  joinWith ('\n\n'),
+  replace (/\n{3,}/g) ('\n\n'),
+  replace (/^\n+/) (''),
+  replace (/\n+$/) ('\n'),
+]);
 
 program
 .version (pkg.version)
@@ -105,7 +122,7 @@ program
 .option ('--url <str>', 'source URL with {filename} and {line} placeholders')
 .parse (process.argv);
 
-var valid = true;
+let valid = true;
 
 if (!(program.headingLevel == null || /^[1-6]$/.test (program.headingLevel))) {
   process.stderr.write ('Invalid --heading-level\n');
@@ -121,23 +138,25 @@ if (!valid) {
   process.exit (1);
 }
 
-//. options :: { headingLevel, headingPrefix, insertInto, prefix, url }
-var options = {
-  headingLevel: Number (R.defaultTo ('3', program.headingLevel)),
-  headingPrefix: R.defaultTo ('//#', program.headingPrefix),
-  insertInto: R.defaultTo (null, program.insertInto),
-  prefix: R.defaultTo ('//.', program.prefix),
-  url: program.url
-};
+//    defaultTo :: a -> a? -> a
+const defaultTo = x => y => y == null ? x : y;
 
-var output = transcribe (options, program.args);
-if (options.insertInto == null) {
+//    output :: String
+const output =
+transcribe ({headingLevel: Number (defaultTo ('3') (program.headingLevel)),
+             headingPrefix: defaultTo ('//#') (program.headingPrefix),
+             prefix: defaultTo ('//.') (program.prefix),
+             url: program.url})
+           (program.args);
+
+if (program.insertInto == null) {
   process.stdout.write (output);
 } else {
   // Read the file, insert the output, and write to the file again
-  fs.writeFileSync (options.insertInto, R.replace (
-    /(<!--transcribe-->)[\s\S]*?(<!--[/]transcribe-->)/,
-    '$1\n\n' + output + '\n$2',
-    fs.readFileSync (options.insertInto, {encoding: 'utf8'})
-  ));
+  fs.writeFileSync (
+    program.insertInto,
+    replace (/(<!--transcribe-->)[\s\S]*?(<!--[/]transcribe-->)/)
+            ('$1\n\n' + output + '\n$2')
+            (fs.readFileSync (program.insertInto, 'utf8'))
+  );
 }

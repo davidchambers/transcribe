@@ -17,15 +17,13 @@ in the form `<heading-prefix> <name> :: <type>`.
 //. > map (String) ([1, 2, 3, 4, 5])
 //. ['1', '2', '3', '4', '5']
 //. ```
-function map(f) {
-  return function(xs) {
-    var output = [];
-    for (var idx = 0; idx < xs.length; idx += 1) {
-      output.push (f (xs[idx]));
-    }
-    return output;
-  };
-}
+const map = f => xs => {
+  const output = [];
+  for (let idx = 0; idx < xs.length; idx += 1) {
+    output.push (f (xs[idx]));
+  }
+  return output;
+};
 ```
 
 The __`--heading-prefix`__ option specifies which lines in the source files
@@ -91,12 +89,12 @@ Here's a complete example:
     ['1', '2', '3', '4', '5']
     ```
 
-    ### <a name="filter" href="https://github.com/plaid/example/blob/v1.2.3/examples/fp.js#L23">`filter :: (a -⁠> Boolean) -⁠> Array a -⁠> Array a`</a>
+    ### <a name="filter" href="https://github.com/plaid/example/blob/v1.2.3/examples/fp.js#L21">`filter :: (a -⁠> Boolean) -⁠> Array a -⁠> Array a`</a>
 
     Returns the list of elements which satisfy the provided predicate.
 
     ```javascript
-    > filter (function(n) { return n % 2 === 0; }) ([1, 2, 3, 4, 5])
+    > filter (n => n % 2 === 0) ([1, 2, 3, 4, 5])
     [2, 4]
     ```
 
