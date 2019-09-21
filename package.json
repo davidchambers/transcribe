@@ -16,9 +16,12 @@
     "/bin/transcribe",
     "/package.json"
   ],
+  "engines": {
+    "node": ">=6.0.0"
+  },
   "dependencies": {
     "commander": "2.8.x",
-    "ramda": "0.19.x"
+    "sanctuary": "2.0.0"
   },
   "devDependencies": {
     "sanctuary-scripts": "2.0.x"
