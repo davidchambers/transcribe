@@ -8,6 +8,12 @@
       "rules": {
         "no-unused-vars": ["error", {"varsIgnorePattern": "^map$"}]
       }
+    },
+    {
+      "files": ["bin/transcribe"],
+      "rules": {
+        "func-style": ["off"]
+      }
     }
   ]
 }

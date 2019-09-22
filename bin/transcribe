@@ -3,35 +3,51 @@
 'use strict';
 
 const fs = require ('fs');
+const path = require ('path');
 
-const program = require ('commander');
 const {create, env} = require ('sanctuary');
 
 const pkg = require ('../package.json');
 
 
 const {
+  I,
   Just,
+  K,
+  Left,
   Nothing,
   Pair,
+  Right,
+  T,
   alt,
   append,
   array,
   compose: B,
+  either,
+  equals,
   flip,
   fromMaybe,
+  ifElse,
   join,
   joinWith,
   lines,
   map,
+  maybe,
   pair,
   pipe,
+  prepend,
   reduce,
+  regex,
+  regexEscape,
+  show,
   snd,
   splitOn,
   stripPrefix,
+  test,
+  unchecked: _,
   unfoldr,
   unlines,
+  value,
 } = create ({checkTypes: false, env});
 
 const map2 = B (map) (map);
@@ -69,94 +85,148 @@ const controlWrapping = pipe ([
   replace (/->/g) ('-\u2060>'),
 ]);
 
-//    formatSignature :: Options -> String -> Number -> String -> String
-const formatSignature = options => filename => num => signature =>
-  '#'.repeat (options.headingLevel) + ' ' +
+//    formatSignature :: Integer -> String -> String -> Number -> String -> String
+const formatSignature = level => url => filename => num => signature =>
+  '#'.repeat (level) + ' ' +
   '<a name="' + esc (replace (/ :: [\s\S]*/) ('') (signature)) + '"' +
     ' href="' + esc (B (replace ('{line}') (num))
                        (replace ('{filename}') (filename))
-                       (options.url)) + '">' +
+                       (url)) + '">' +
     '`' + controlWrapping (signature) + '`' +
   '</a>';
 
-//    parseLine :: Options -> String -> Number -> String -> String
-const parseLine = options => filename => num => pipe ([
-  replace (/^\s+/) (''),
-  s => alt (map (replace (/^[ ]/) (''))
-                (stripPrefix (options.prefix) (s)))
-           (map (B (formatSignature (options) (filename) (num))
-                   (replace (/^[ ]/) ('')))
-                (stripPrefix (options.headingPrefix) (s))),
-  fromMaybe (''),
-]);
+//    parseLine :: Integer -> String -> String -> String -> String -> Number -> String -> String
+const parseLine = level => headingPrefix => prefix => url => filename => num =>
+  pipe ([replace (/^\s+/) (''),
+         s => alt (map (replace (/^[ ]/) (''))
+                       (stripPrefix (prefix) (s)))
+                  (map (B (formatSignature (level) (url) (filename) (num))
+                          (replace (/^[ ]/) ('')))
+                       (stripPrefix (headingPrefix) (s))),
+         fromMaybe ('')]);
 
-//    parseFile :: Options -> String -> String
-const parseFile = options => filename =>
+//    parseFile :: (String -> Number -> String -> String) -> String -> String
+const parseFile = parseLine => filename =>
   unlines (snd (reduce (flip (line =>
                                 pair (num => B (Pair (num + 1))
-                                               (append (parseLine (options)
-                                                                  (filename)
+                                               (append (parseLine (filename)
                                                                   (num)
                                                                   (line))))))
                        (Pair (1) ([]))
                        (lines (fs.readFileSync (filename, 'utf8')))));
 
-//    transcribe :: Options -> Array String -> String
-const transcribe = options => pipe ([
-  map (parseFile (options)),
-  joinWith ('\n\n'),
-  replace (/\n{3,}/g) ('\n\n'),
-  replace (/^\n+/) (''),
-  replace (/\n+$/) ('\n'),
-]);
+//    defaultOptions :: Options
+const defaultOptions = {
+  help: false,
+  version: false,
+  headingLevel: 3,
+  headingPrefix: '//#',
+  insertInto: Nothing,
+  prefix: '//.',
+  url: Nothing,
+};
 
-program
-.version (pkg.version)
-.usage ('[options] <file ...>')
-.description (pkg.description)
-.option ('--heading-level <num>', 'heading level in range [1, 6] (default: 3)')
-.option ('--heading-prefix <str>', 'prefix for heading lines (default: "//#")')
-.option ('--insert-into <str>',
-         'name of a file into which Transcribe will insert generated output')
-.option ('--prefix <str>', 'prefix for non-heading lines (default: "//.")')
-.option ('--url <str>', 'source URL with {filename} and {line} placeholders')
-.parse (process.argv);
+//    updaters :: StrMap (Either (Options -> Options) (String -> Either String (Options -> Options)))
+const updaters = {
+  '-h':
+    Left (_.insert ('help') (true)),
+  '--help':
+    Left (_.insert ('help') (true)),
+  '-V':
+    Left (_.insert ('version') (true)),
+  '--version':
+    Left (_.insert ('version') (true)),
+  '--heading-level':
+    Right (s => maybe (Left ('--heading-level must be in range [1, 6]'))
+                      (B (Right) (_.insert ('headingLevel')))
+                      (value (s) ({1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6}))),
+  '--heading-prefix':
+    Right (s => Right (_.insert ('headingPrefix') (s))),
+  '--insert-into':
+    Right (s => Right (_.insert ('insertInto') (Just (s)))),
+  '--prefix':
+    Right (s => Right (_.insert ('prefix') (s))),
+  '--url':
+    Right (s => Right (_.insert ('url') (Just (s)))),
+};
 
-let valid = true;
+//    parseArgs :: Options -> Array String -> Either String (Pair Options (Array String))
+const parseArgs = function parseArgs(opts) {
+  return array (Right (Pair (opts) ([])))
+               (s => test (/^-[a-z]$|^--(?!$)/i) (s) ?
+                     maybe (K (Left (s + ' is unrecognized')))
+                           (either (B (parseArgs) (T (opts)))
+                                   (B (array (Left (s + ' requires a value')))
+                                      (B (either (B (K) (Left))
+                                                 (B (parseArgs) (T (opts)))))))
+                           (value (s) (updaters)) :
+                     B (Right)
+                       (B (Pair (opts))
+                          (ifElse (equals ('--')) (K (I)) (prepend) (s))));
+};
 
-if (!(program.headingLevel == null || /^[1-6]$/.test (program.headingLevel))) {
-  process.stderr.write ('Invalid --heading-level\n');
-  valid = false;
-}
+/* eslint-disable max-len */
 
-if (program.url == null) {
-  process.stderr.write ('No --url template specified\n');
-  valid = false;
-}
+//    help :: String
+const help = `
+  Usage: ${path.basename (__filename)} [options] <file ...>
 
-if (!valid) {
-  process.exit (1);
-}
+  ${pkg.description}
 
-//    defaultTo :: a -> a? -> a
-const defaultTo = x => y => y == null ? x : y;
+  Options:
 
-//    output :: String
-const output =
-transcribe ({headingLevel: Number (defaultTo ('3') (program.headingLevel)),
-             headingPrefix: defaultTo ('//#') (program.headingPrefix),
-             prefix: defaultTo ('//.') (program.prefix),
-             url: program.url})
-           (program.args);
+    -h, --help              output usage information
+    -V, --version           output the version number
+    --heading-level <num>   heading level in range [1, 6] (default: ${show (defaultOptions.headingLevel)})
+    --heading-prefix <str>  prefix for heading lines (default: ${show (defaultOptions.headingPrefix)})
+    --insert-into <str>     name of a file into which Transcribe will insert generated output
+    --prefix <str>          prefix for non-heading lines (default: ${show (defaultOptions.prefix)})
+    --url <str>             source URL with {filename} and {line} placeholders
 
-if (program.insertInto == null) {
-  process.stdout.write (output);
-} else {
-  // Read the file, insert the output, and write to the file again
-  fs.writeFileSync (
-    program.insertInto,
-    replace (/(<!--transcribe-->)[\s\S]*?(<!--[/]transcribe-->)/)
-            ('$1\n\n' + output + '\n$2')
-            (fs.readFileSync (program.insertInto, 'utf8'))
-  );
-}
+`;
+
+/* eslint-enable max-len */
+
+//    abort :: String -> () -> Undefined
+const abort = s => () => { process.stderr.write (s); process.exit (1); };
+
+//    print :: String -> () -> Undefined
+const print = s => () => { process.stdout.write (s); };
+
+//    insertInto :: String -> String -> () -> Undefined
+const insertInto = filename => s => () => {
+  const opening = '<!--transcribe-->';
+  const closing = '<!--/transcribe-->';
+  fs.writeFileSync (filename,
+                    replace (regex ('')
+                                   (regexEscape (opening) +
+                                    '[\\s\\S]*?' +
+                                    regexEscape (closing)))
+                            (opening + '\n\n' + s + '\n' + closing)
+                            (fs.readFileSync (filename, 'utf8')));
+};
+
+//    main :: () -> Undefined
+const main =
+either (s => abort (s + '\n'))
+       (pair (opts =>
+                opts.help ?
+                  K (print (help)) :
+                opts.version ?
+                  K (print (pkg.version + '\n')) :
+                // else
+                  maybe (K (abort ('--url is required\n')))
+                        (B (B (B (maybe (print) (insertInto) (opts.insertInto))
+                                 (B (replace (/\n+$/) ('\n'))
+                                    (B (replace (/^\n+/) (''))
+                                       (B (replace (/\n{3,}/g) ('\n\n'))
+                                          (joinWith ('\n\n')))))))
+                           (B (map)
+                              (B (parseFile)
+                                 (parseLine (opts.headingLevel)
+                                            (opts.headingPrefix)
+                                            (opts.prefix)))))
+                        (opts.url)))
+       (parseArgs (defaultOptions) (process.argv.slice (2)));
+
+main ();
