@@ -3,5 +3,5 @@
 # Please consult https://help.github.com/articles/about-codeowners/
 # for documentation.
 
-# PLATFORM codeowners requirements.
+# Plaid codeowners requirements.
 * @plaid/developer-relations
