@@ -21,7 +21,7 @@
   },
   "dependencies": {
     "commander": "2.8.x",
-    "sanctuary": "2.0.0"
+    "sanctuary": "3.1.0"
   },
   "devDependencies": {
     "sanctuary-scripts": "4.0.x"
