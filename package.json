@@ -3,11 +3,11 @@
   "version": "1.1.2",
   "description": "Generate Markdown documentation from code comments",
   "license": "MIT",
-  "homepage": "https://github.com/plaid/transcribe",
-  "bugs": "https://github.com/plaid/transcribe/issues",
+  "homepage": "https://github.com/davidchambers/transcribe",
+  "bugs": "https://github.com/davidchambers/transcribe/issues",
   "repository": {
     "type": "git",
-    "url": "git://github.com/plaid/transcribe.git"
+    "url": "git://github.com/davidchambers/transcribe.git"
   },
   "bin": "./bin/transcribe",
   "files": [
