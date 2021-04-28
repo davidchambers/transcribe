@@ -24,7 +24,7 @@
     "sanctuary": "2.0.0"
   },
   "devDependencies": {
-    "sanctuary-scripts": "2.0.x"
+    "sanctuary-scripts": "4.0.x"
   },
   "scripts": {
     "doctest": "sanctuary-doctest",
