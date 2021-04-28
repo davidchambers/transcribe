@@ -59,7 +59,7 @@ function identity(x) {
 exports.identity = identity;
 EOF
 IFS='' read -r -d '' expected <<'EOF'
-### <a name="identity" href="XXX">`identity :: a -⁠> a`</a>
+### <a name="identity" href="XXX">`identity :: a -> a`</a>
 
 The identity function. Returns its argument.
 
