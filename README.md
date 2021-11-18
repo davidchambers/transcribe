@@ -79,7 +79,7 @@ Here's a complete example:
     $ transcribe \
     >   --url 'https://github.com/plaid/example/blob/v1.2.3/{filename}#L{line}' \
     >   -- examples/fp.js
-    ### <a name="map" href="https://github.com/plaid/example/blob/v1.2.3/examples/fp.js#L3">`map :: (a -⁠> b) -⁠> Array a -⁠> Array b`</a>
+    ### <a name="map" href="https://github.com/plaid/example/blob/v1.2.3/examples/fp.js#L3">`map :: (a -> b) -> Array a -> Array b`</a>
 
     Transforms a list of elements of type `a` into a list of elements
     of type `b` using the provided function of type `a -> b`.
@@ -89,7 +89,7 @@ Here's a complete example:
     ['1', '2', '3', '4', '5']
     ```
 
-    ### <a name="filter" href="https://github.com/plaid/example/blob/v1.2.3/examples/fp.js#L21">`filter :: (a -⁠> Boolean) -⁠> Array a -⁠> Array a`</a>
+    ### <a name="filter" href="https://github.com/plaid/example/blob/v1.2.3/examples/fp.js#L21">`filter :: (a -> Boolean) -> Array a -> Array a`</a>
 
     Returns the list of elements which satisfy the provided predicate.
 
