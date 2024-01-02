@@ -3,7 +3,7 @@
 Transcribe is a simple program which generates Markdown documentation from code
 comments.
 
-The general idea is that each "export" should be accompanied by a "docstring".
+The general idea is that each export should be accompanied by a "docstring".
 The first line of the "docstring" should be a Haskell-inspired type signature
 in the form `<heading-prefix> <name> :: <type>`.
 
@@ -17,7 +17,7 @@ in the form `<heading-prefix> <name> :: <type>`.
 //. > map (String) ([1, 2, 3, 4, 5])
 //. ['1', '2', '3', '4', '5']
 //. ```
-const map = f => xs => {
+export const map = f => xs => {
   const output = [];
   for (let idx = 0; idx < xs.length; idx += 1) {
     output.push (f (xs[idx]));
@@ -51,7 +51,7 @@ lines of source code on GitHub or another code-hosting site. The value should
 include `{filename}` and `{line}` placeholders to be replaced with the filename
 and line number of each of the signature lines. For example:
 
-    --url 'https://github.com/plaid/sanctuary/blob/v0.4.0/{filename}#L{line}'
+    --url 'https://github.com/sanctuary-js/sanctuary/blob/v1.0.0/{filename}#L{line}'
 
 Avoid pointing to a moving target: include a tag name or commit hash rather
 than a branch name such as `main`.
@@ -77,9 +77,9 @@ which they are specified.
 Here's a complete example:
 
     $ transcribe \
-    >   --url 'https://github.com/plaid/example/blob/v1.2.3/{filename}#L{line}' \
+    >   --url 'https://github.com/owner/name/blob/v1.2.3/{filename}#L{line}' \
     >   -- examples/fp.js
-    ### <a name="map" href="https://github.com/plaid/example/blob/v1.2.3/examples/fp.js#L3">`map :: (a -> b) -> Array a -> Array b`</a>
+    ### <a name="map" href="https://github.com/owner/name/blob/v1.2.3/examples/fp.js#L1">`map :: (a -⁠> b) -⁠> Array a -⁠> Array b`</a>
 
     Transforms a list of elements of type `a` into a list of elements
     of type `b` using the provided function of type `a -> b`.
@@ -89,9 +89,9 @@ Here's a complete example:
     ['1', '2', '3', '4', '5']
     ```
 
-    ### <a name="filter" href="https://github.com/plaid/example/blob/v1.2.3/examples/fp.js#L21">`filter :: (a -> Boolean) -> Array a -> Array a`</a>
+    ### <a name="filter" href="https://github.com/owner/name/blob/v1.2.3/examples/fp.js#L18">`filter :: (a -⁠> Boolean) -⁠> Array a -⁠> Array a`</a>
 
-    Returns the list of elements which satisfy the provided predicate.
+    Returns the list of elements that satisfy the provided predicate.
 
     ```javascript
     > filter (n => n % 2 === 0) ([1, 2, 3, 4, 5])
@@ -103,15 +103,15 @@ generate lightweight API documentation:
 
     $ printf '\n## API\n\n' >>README.md
     $ transcribe \
-    >   --url 'https://github.com/plaid/example/blob/v1.2.3/{filename}#L{line}' \
+    >   --url 'https://github.com/owner/name/blob/v1.2.3/{filename}#L{line}' \
     >   -- examples/fp.js >>README.md
 
-Reading from stdin is not currently supported.
+Reading from stdin is not supported.
 
 One could also insert the output into an existing file by providing the
 `--insert-into` option:
 
     $ transcribe \
-    >   --url 'https://github.com/plaid/example/blob/v1.2.3/{filename}#L{line}' \
+    >   --url 'https://github.com/owner/name/blob/v1.2.3/{filename}#L{line}' \
     >   --insert-into README.md
     >   -- examples/fp.js

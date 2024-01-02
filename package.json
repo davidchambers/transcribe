@@ -9,21 +9,27 @@
     "type": "git",
     "url": "git://github.com/davidchambers/transcribe.git"
   },
-  "bin": "./bin/transcribe",
+  "type": "module",
+  "exports": {
+    "./package.json": "./package.json"
+  },
+  "bin": "./bin/transcribe.js",
   "files": [
+    "/src/",
     "/LICENSE",
     "/README.md",
-    "/bin/transcribe",
+    "/bin/transcribe.js",
     "/package.json"
   ],
   "engines": {
-    "node": ">=6.0.0"
+    "node": ">=16.0.0"
   },
   "dependencies": {
-    "commander": "2.8.x",
-    "sanctuary": "3.1.0"
+    "commander": "2.8.x"
   },
   "devDependencies": {
+    "c8": "8.0.x",
+    "oletus": "4.0.x",
     "sanctuary-scripts": "6.0.x"
   },
   "scripts": {

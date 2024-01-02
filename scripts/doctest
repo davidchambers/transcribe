@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 set -euf -o pipefail
 
-node_modules/.bin/doctest --module commonjs --prefix . -- examples/fp.js
+node_modules/.bin/doctest --module esm --prefix . -- examples/fp.js

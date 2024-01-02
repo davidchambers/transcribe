@@ -1,12 +1,24 @@
 {
   "root": true,
   "extends": ["./node_modules/sanctuary-style/eslint.json"],
-  "env": {"node": true},
+  "parserOptions": {"ecmaVersion": 2022, "sourceType": "module"},
+  "globals": {"console": "readonly"},
+  "rules": {
+    "func-call-spacing": ["error", "never"],
+    "max-len": ["off"]
+  },
   "overrides": [
     {
       "files": ["README.md"],
       "rules": {
+        "func-call-spacing": ["off"],
         "no-unused-vars": ["error", {"varsIgnorePattern": "^map$"}]
+      }
+    },
+    {
+      "files": ["examples/**/*.js"],
+      "rules": {
+        "func-call-spacing": ["error", "always"]
       }
     }
   ]

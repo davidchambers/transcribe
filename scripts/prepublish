@@ -3,7 +3,7 @@ set -euf -o pipefail
 
 node_modules/.bin/sanctuary-prepublish "$@"
 
-bin/transcribe \
+bin/transcribe.js \
   --url "https://github.com/davidchambers/transcribe/blob/v$VERSION/{filename}#L{line}" \
   -- examples/fp.js >examples/fp.md
 git add examples/fp.md
