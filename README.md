@@ -54,7 +54,7 @@ and line number of each of the signature lines. For example:
     --url 'https://github.com/plaid/sanctuary/blob/v0.4.0/{filename}#L{line}'
 
 Avoid pointing to a moving target: include a tag name or commit hash rather
-than a branch name such as `master`.
+than a branch name such as `main`.
 
 The __`--heading-level`__ option specifies the heading level, an integer in
 range \[1, 6\]. The default value is `3`, which corresponds to an `<h3>`
