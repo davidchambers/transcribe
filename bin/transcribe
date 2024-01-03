@@ -5,7 +5,8 @@
 const fs = require ('fs');
 
 const program = require ('commander');
-const {create, env} = require ('sanctuary');
+const Future = require ('fluture');
+const sanctuary = require ('sanctuary');
 
 const pkg = require ('../package.json');
 
@@ -17,6 +18,7 @@ const {
   alt,
   append,
   array,
+  chain,
   compose: B,
   flip,
   fromMaybe,
@@ -26,17 +28,34 @@ const {
   map,
   pair,
   pipe,
+  promap,
   reduce,
   snd,
   splitOn,
   stripPrefix,
+  traverse,
   unfoldr,
   unlines,
-} = create ({checkTypes: false, env});
+} = sanctuary.unchecked;
 
 const map2 = B (map) (map);
 const map3 = B (map) (map2);
 const map4 = B (map) (map3);
+
+//    readFile :: String -> Future Error String
+const readFile = path => (
+  Future.node (callback => fs.readFile (path, 'utf8', callback))
+);
+
+//    writeFile :: String -> String -> Future Error Undefined
+const writeFile = path => data => (
+  Future.node (callback => fs.writeFile (path, data, callback))
+);
+
+//    writeStdOut :: String -> Future Error Undefined
+const writeStdOut = data => (
+  Future.node (callback => process.stdout.write (data, 'utf8', callback))
+);
 
 //    replace :: (String | RegExp) -> String -> String -> String
 const replace = patt => repl => s => s.replace (patt, repl);
@@ -89,25 +108,29 @@ const parseLine = options => filename => num => pipe ([
   fromMaybe (''),
 ]);
 
-//    parseFile :: Options -> String -> String
-const parseFile = options => filename =>
-  unlines (snd (reduce (flip (line =>
-                                pair (num => B (Pair (num + 1))
-                                               (append (parseLine (options)
-                                                                  (filename)
-                                                                  (num)
-                                                                  (line))))))
-                       (Pair (1) ([]))
-                       (lines (fs.readFileSync (filename, 'utf8')))));
+//    parseFile :: Options -> String -> Future Error String
+const parseFile = options => filename => (
+  map (promap (lines)
+              (unlines)
+              (B (snd)
+                 (reduce (flip (line =>
+                                  pair (num => B (Pair (num + 1))
+                                                 (append (parseLine (options)
+                                                                    (filename)
+                                                                    (num)
+                                                                    (line))))))
+                         (Pair (1) ([])))))
+      (readFile (filename))
+);
 
-//    transcribe :: Options -> Array String -> String
-const transcribe = options => pipe ([
-  map (parseFile (options)),
-  joinWith ('\n\n'),
-  replace (/\n{3,}/g) ('\n\n'),
-  replace (/^\n+/) (''),
-  replace (/\n+$/) ('\n'),
-]);
+//    transcribe :: Options -> Array String -> Future Error String
+const transcribe = options => (
+  B (map (pipe ([joinWith ('\n\n'),
+                 replace (/\n{3,}/g) ('\n\n'),
+                 replace (/^\n+/) (''),
+                 replace (/\n+$/) ('\n')])))
+    (traverse (Future) (parseFile (options)))
+);
 
 program
 .version (pkg.version)
@@ -140,22 +163,24 @@ if (!valid) {
 //    defaultTo :: a -> a? -> a
 const defaultTo = x => y => y == null ? x : y;
 
-//    output :: String
-const output =
-transcribe ({headingLevel: Number (defaultTo ('3') (program.headingLevel)),
-             headingPrefix: defaultTo ('//#') (program.headingPrefix),
-             prefix: defaultTo ('//.') (program.prefix),
-             url: program.url})
-           (program.args);
+//    options :: Options
+const options = {
+  headingLevel: Number (defaultTo ('3') (program.headingLevel)),
+  headingPrefix: defaultTo ('//#') (program.headingPrefix),
+  prefix: defaultTo ('//.') (program.prefix),
+  url: program.url,
+};
 
-if (program.insertInto == null) {
-  process.stdout.write (output);
-} else {
-  // Read the file, insert the output, and write to the file again
-  fs.writeFileSync (
-    program.insertInto,
-    replace (/(<!--transcribe-->)[\s\S]*?(<!--[/]transcribe-->)/)
-            ('$1\n\n' + output + '\n$2')
-            (fs.readFileSync (program.insertInto, 'utf8'))
-  );
-}
+//    delimiters :: RegExp
+const delimiters = /(<!--transcribe-->)[\s\S]*?(<!--[/]transcribe-->)/;
+
+Future.fork
+  (e => { console.error (String (e)); process.exit (1); })
+  (_ => {                             process.exit (0); })
+  (chain (output =>
+            program.insertInto == null ?
+            writeStdOut (output) :
+            chain (writeFile (program.insertInto))
+                  (map (replace (delimiters) ('$1\n\n' + output + '\n$2'))
+                       (readFile (program.insertInto))))
+         (transcribe (options) (program.args)));
